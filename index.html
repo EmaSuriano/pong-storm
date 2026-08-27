@@ -9,59 +9,42 @@
 
 <div id="overlay">
   <div id="card">
-    <p class="kicker">Wild 1v1</p>
     <h1>Pongstorm</h1>
-    <p class="sub">1v1 storm pong. Create a game or join with a room code.</p>
+    <p class="sub">1v1 arcade Pong. Superpowers. Multiple balls. First to 7.</p>
 
-    <div id="menuMain">
-      <div class="row">
-        <button class="primary" id="createBtn">Create Game</button>
-      </div>
-      <div class="row">
-        <button id="joinMenuBtn">Join Game</button>
-      </div>
+    <div class="row">
+      <button class="primary" id="hostBtn">Create Room</button>
     </div>
 
-    <div id="createPanel">
-      <label>Room code</label>
-      <div id="codeDisplay">------</div>
+    <div id="linkRow">
       <label>Share this link</label>
       <div id="linkBox">
         <input type="text" id="linkInput" readonly>
         <button id="copyBtn">Copy</button>
       </div>
-      <p class="hint">Waiting for an opponent. Keep this tab open.</p>
-      <button id="createBack" type="button">Back</button>
     </div>
 
-    <div id="joinPanel">
-      <label>Room code</label>
-      <input type="text" id="joinCode" maxlength="8" placeholder="abc123" autocomplete="off" spellcheck="false">
-      <div class="row" style="margin-top:12px">
-        <button class="primary" id="joinBtn">Join Game</button>
-      </div>
-      <button id="joinBack" type="button">Back</button>
-    </div>
-
-    <div id="status"></div>
+    <div id="status">Waiting...</div>
   </div>
 </div>
 
 <div id="gameWrap">
   <div id="shareBar">
-    <span class="shareLabel">Invite a friend</span>
+    <span class="shareLabel">Invite</span>
     <input type="text" id="shareLinkInput" readonly>
     <button type="button" id="shareCopyBtn">Copy link</button>
   </div>
   <div id="hud">
-    <span class="you">HOST</span> <span id="scoreHost">0</span>
-    &nbsp;—&nbsp;
-    <span class="peer">JOIN</span> <span id="scorePeer">0</span>
-    &nbsp;|&nbsp; slot <span id="slotYou">-</span>
-    &nbsp;|&nbsp; WASD / arrows move · Space / J charge smash
-    &nbsp;|&nbsp; connected: <span id="peerCount">0</span>
+    <span class="you">■ HOST</span> left &nbsp;|&nbsp;
+    <span class="peer">■ JOIN</span> right &nbsp;|&nbsp;
+    WASD / Arrows move · Space / J smash &nbsp;|&nbsp;
+    peers: <span id="peerCount">0</span>
   </div>
   <canvas id="gameCanvas"></canvas>
+  <div id="endBar">
+    <button type="button" id="rematchBtn">Play again</button>
+    <span id="endNote"></span>
+  </div>
 </div>
 
 <script type="module" src="/src/main.ts"></script>
