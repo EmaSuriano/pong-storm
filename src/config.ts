@@ -1,23 +1,63 @@
 export const APP_ID = 'pong-storm'
+
 export const WIDTH = 800
-export const HEIGHT = 450
+export const HEIGHT = 480
+
+export const HOST_COLOR = '#67A593'
+export const JOIN_COLOR = '#E07A5F'
+
 export const WIN_SCORE = 7
-export const HOST_COLOR = '#6ee7a8'
-export const JOIN_COLOR = '#f2b84b'
-export const PADDLE_W = 14
-export const PADDLE_H = 78
-export const PADDLE_SPEED = 380
-export const BALL_R = 7
-export const BALL_SPEED = 300
-export const BALL_SPEED_MAX = 560
-export const HIT_SPEEDUP = 1.055
-export const SMASH_MULT = 1.58
 export const MAX_BALLS = 6
-export const CHARGE_S = 0.62
-export const GIANT_MULT = 1.7
-export const GIANT_S = 6
-export const CURVE_S = 3.6
-export const GHOST_S = 4
-export const SERVE_DELAY_MS = 720
-export const INPUT_MS = 50
-export const WORLD_MS = 55
+export const MULTIBALL_SCORE = 2
+
+export const PADDLE_W = 14
+export const PADDLE_H = 90
+export const PADDLE_SPEED = 420
+export const PADDLE_MARGIN = 36
+export const GIANT_SCALE = 1.72
+export const GIANT_TIME = 5.5
+
+export const BALL_R = 8
+export const BALL_SPEED = 310
+export const BALL_SPEED_MAX = 740
+export const SMASH_SPEED = 660
+export const SMASH_CHARGE_TIME = 0.65
+export const SWING_WINDOW = 0.24
+export const ENGLISH = 0.42
+export const ANGLE_KICK = 0.95
+export const CURVE_SPIN = 2.35
+export const SERVE_DELAY = 0.9
+
+export const PICKUP_R = 15
+export const PICKUP_EVERY = 6.5
+export const MAX_PICKUPS = 2
+
+export const NET_HZ = 20
+
+export const POWERS = ['split', 'smash', 'giant', 'curve', 'ghost'] as const
+export type PowerKind = (typeof POWERS)[number]
+
+export const POWER_LABEL: Record<PowerKind, string> = {
+  split: 'SPLIT',
+  smash: 'SMASH',
+  giant: 'GIANT',
+  curve: 'CURVE',
+  ghost: 'GHOST',
+}
+
+export const POWER_COLOR: Record<PowerKind, string> = {
+  split: '#F0B090',
+  smash: '#E07A5F',
+  giant: '#A090C0',
+  curve: '#8090A0',
+  ghost: '#F8EDE0',
+}
+
+export const BALL_COLORS = [
+  '#FBE7BA',
+  '#7dd3fc',
+  '#f0abfc',
+  '#fde047',
+  '#fb7185',
+  '#86efac',
+]

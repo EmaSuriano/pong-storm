@@ -137,10 +137,25 @@ export function startGame(
     width: WIDTH,
     height: HEIGHT,
     letterbox: true,
-    background: [7, 9, 14],
+    background: [112, 128, 160],
     crisp: false,
     canvas,
   })
+
+  const assetBase = import.meta.env.BASE_URL
+  let artOk = false
+  k.loadSprite('courtBg', `${assetBase}court-bg.png`).onLoad(() => { artOk = true })
+  k.loadSprite('paddleHost', `${assetBase}paddle-host.png`)
+  k.loadSprite('paddleJoin', `${assetBase}paddle-join.png`)
+  k.loadSprite('ballArt', `${assetBase}ball.png`)
+  for (const kind of POWERS) {
+    k.loadSprite('pickup-' + kind, `${assetBase}pickup-${kind}.png`)
+  }
+
+  function spriteReady(name: string): boolean {
+    const a = k.getSprite(name)
+    return !!(a && a.loaded && a.data)
+  }
 
   const preventKeys = (ev: KeyboardEvent) => {
     if (
@@ -168,11 +183,12 @@ export function startGame(
 
   const hostCol = rgbHex(HOST_COLOR)
   const joinCol = rgbHex(JOIN_COLOR)
-  const ink = rgbHex('#e8edf5')
-  const dim = rgbHex('#8b93a7')
-  const table = rgbHex('#0b1018')
-  const lineCol = rgbHex('#243044')
-  const danger = rgbHex('#f2555a')
+  const ink = rgbHex('#FCF1E1')
+  const dim = rgbHex('#8090A0')
+  const table = rgbHex('#7080A0')
+  const lineCol = rgbHex('#A090C0')
+  const danger = rgbHex('#F58463')
+  const cream = rgbHex('#FCF1E1')
 
   function makePaddle(side: Side): Paddle {
     return {
@@ -849,22 +865,28 @@ export function startGame(
 
   function drawPaddleGfx(p: Paddle, color: ReturnType<typeof rgbHex>): void {
     const glow = 0.25 + p.charge * 0.7
-    k.drawRect({
-      pos: k.vec2(p.x, p.y),
-      width: PADDLE_W + 10,
-      height: p.h + 10,
-      color,
-      opacity: 0.12 + p.charge * 0.18,
-      anchor: 'center',
-    })
-    k.drawRect({
-      pos: k.vec2(p.x, p.y),
-      width: PADDLE_W,
-      height: p.h,
-      color,
-      opacity: 0.85 + p.charge * 0.15,
-      anchor: 'center',
-    })
+    const spriteName = p.side === 'left' ? 'paddleHost' : 'paddleJoin'
+    const pw = PADDLE_W * 1.35
+    const opacity = 0.92 + p.charge * 0.08
+    if (spriteReady(spriteName)) {
+      k.drawSprite({
+        sprite: spriteName,
+        pos: k.vec2(p.x, p.y),
+        width: pw,
+        height: p.h,
+        anchor: 'center',
+        opacity,
+      })
+    } else {
+      k.drawRect({
+        pos: k.vec2(p.x, p.y),
+        width: PADDLE_W,
+        height: p.h,
+        color,
+        opacity: 0.85 + p.charge * 0.15,
+        anchor: 'center',
+      })
+    }
     if (p.charge > 0.02) {
       const h = p.h * p.charge
       k.drawRect({
@@ -874,7 +896,7 @@ export function startGame(
         ),
         width: 4,
         height: h,
-        color: rgbHex('#fff7ed'),
+        color: cream,
         opacity: glow,
         anchor: 'center',
       })
@@ -954,30 +976,40 @@ export function startGame(
   })
 
   k.onDraw(() => {
-    k.drawRect({
-      pos: k.vec2(0, 0),
-      width: WIDTH,
-      height: HEIGHT,
-      color: table,
-    })
+    if (artOk && spriteReady('courtBg')) {
+      k.drawSprite({
+        sprite: 'courtBg',
+        pos: k.vec2(0, 0),
+        width: WIDTH,
+        height: HEIGHT,
+      })
+    } else {
+      k.drawRect({
+        pos: k.vec2(0, 0),
+        width: WIDTH,
+        height: HEIGHT,
+        color: table,
+      })
+    }
 
     k.drawRect({
-      pos: k.vec2(8, 8),
-      width: WIDTH - 16,
-      height: HEIGHT - 16,
-      color: rgbHex('#101826'),
+      pos: k.vec2(4, 4),
+      width: WIDTH - 8,
+      height: HEIGHT - 8,
+      color: lineCol,
       fill: false,
-      outline: { width: 2, color: lineCol },
+      outline: { width: 1, color: lineCol },
+      opacity: 0.16,
     })
 
-    for (let y = 18; y < HEIGHT - 18; y += 18) {
+    for (let y = 18; y < HEIGHT - 18; y += 22) {
       k.drawRect({
         pos: k.vec2(WIDTH / 2, y),
-        width: 4,
+        width: 3,
         height: 10,
-        color: lineCol,
+        color: cream,
         anchor: 'center',
-        opacity: 0.7,
+        opacity: 0.25,
       })
     }
 
@@ -987,19 +1019,31 @@ export function startGame(
         width: WIDTH / 2,
         height: HEIGHT,
         color: flashSide === 'left' ? joinCol : hostCol,
-        opacity: flashT * 0.18,
+        opacity: flashT * 0.12,
       })
     }
 
     for (const pk of pickups) {
       const col = rgbHex(POWER_COLOR[pk.kind])
       const pulse = 1 + 0.08 * Math.sin(clock * 6 + pk.id)
-      drawGlowCircle(pk.x, pk.y, PICKUP_R * pulse, col, 1.1)
+      const sz = PICKUP_R * 2.4 * pulse
+      const spr = 'pickup-' + pk.kind
+      if (spriteReady(spr)) {
+        k.drawSprite({
+          sprite: spr,
+          pos: k.vec2(pk.x, pk.y),
+          width: sz,
+          height: sz,
+          anchor: 'center',
+        })
+      } else {
+        drawGlowCircle(pk.x, pk.y, PICKUP_R * pulse, col, 1.1)
+      }
       k.drawText({
         text: POWER_LABEL[pk.kind][0]!,
         pos: k.vec2(pk.x, pk.y),
         size: 14,
-        color: rgbHex('#0b1018'),
+        color: rgbHex('#4A3F4A'),
         anchor: 'center',
       })
     }
@@ -1010,17 +1054,34 @@ export function startGame(
     }
 
     for (const b of balls) {
-      const hex = BALL_COLORS[b.tint % BALL_COLORS.length] || BALL_COLORS[0]!
-      const col = rgbHex(hex)
-      const extra = b.hot > 0 ? 1.35 : 1
+      const peach = rgbHex('#F0B090')
       const op = b.ghost ? 0.45 : 1
-      drawGlowCircle(b.x, b.y, BALL_R, col, extra, op)
+      const hotScale = b.hot > 0 ? 1.12 : 1
+      const size = BALL_R * 2 * hotScale
       if (b.hot > 0) {
         k.drawCircle({
           pos: k.vec2(b.x - Math.sign(b.vx) * 8, b.y),
-          radius: BALL_R * 0.7,
-          color: col,
-          opacity: 0.35 * b.hot * 3,
+          radius: BALL_R * 1.15,
+          color: peach,
+          opacity: 0.28 * Math.min(1, b.hot * 3),
+        })
+      }
+      if (spriteReady('ballArt')) {
+        k.drawSprite({
+          sprite: 'ballArt',
+          pos: k.vec2(b.x, b.y),
+          width: size,
+          height: size,
+          anchor: 'center',
+          opacity: op,
+        })
+      } else {
+        const hex = BALL_COLORS[b.tint % BALL_COLORS.length] || BALL_COLORS[0]!
+        k.drawCircle({
+          pos: k.vec2(b.x, b.y),
+          radius: BALL_R * hotScale,
+          color: rgbHex(hex),
+          opacity: op,
         })
       }
     }
@@ -1034,14 +1095,14 @@ export function startGame(
         pos: k.vec2(0, 0),
         width: WIDTH,
         height: HEIGHT,
-        color: rgbHex('#05070c'),
-        opacity: 0.35,
+        color: rgbHex('#4A3F5A'),
+        opacity: 0.38,
       })
       k.drawText({
         text: 'PONGSTORM',
         pos: k.vec2(WIDTH / 2, HEIGHT / 2 - 28),
         size: 36,
-        color: hostCol,
+        color: cream,
         anchor: 'center',
       })
       k.drawText({
@@ -1071,7 +1132,7 @@ export function startGame(
         pos: k.vec2(0, 0),
         width: WIDTH,
         height: HEIGHT,
-        color: rgbHex('#05070c'),
+        color: rgbHex('#4A3F5A'),
         opacity: 0.4,
       })
       const label = winner === 'left' ? 'HOST WINS' : 'JOINER WINS'

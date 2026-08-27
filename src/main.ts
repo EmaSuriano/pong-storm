@@ -13,6 +13,9 @@ const isHost = !roomParam
 let roomCode = roomParam
 
 const overlay = required<HTMLElement>('overlay')
+overlay.style.backgroundImage = `linear-gradient(rgba(58, 48, 72, 0.42), rgba(90, 96, 140, 0.68)), url(${import.meta.env.BASE_URL}lobby-hero.png)`
+overlay.style.backgroundSize = 'cover'
+overlay.style.backgroundPosition = 'center'
 const hostBtn = required<HTMLButtonElement>('hostBtn')
 const linkRow = required<HTMLElement>('linkRow')
 const linkInput = required<HTMLInputElement>('linkInput')
