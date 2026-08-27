@@ -1,10 +1,19 @@
 {
-  "name": "kaplay-coop-starter",
+  "name": "pong-storm",
   "private": true,
   "type": "module",
-  "description": "Vite + TypeScript starter for peer-to-peer coop games with Kaplay and Trystero (MQTT signaling).",
-  "homepage": "https://emasuriano.github.io/kaplay-coop-starter/",
-  "keywords": ["kaplay", "trystero", "webrtc", "coop", "multiplayer", "vite", "typescript", "p2p"],
+  "description": "Wild 1v1 browser Pong with superpowers and multiball. Host-authoritative P2P via Kaplay and Trystero MQTT.",
+  "homepage": "https://emasuriano.github.io/pong-storm/",
+  "keywords": [
+    "pong",
+    "kaplay",
+    "trystero",
+    "webrtc",
+    "multiplayer",
+    "vite",
+    "typescript",
+    "p2p"
+  ],
   "license": "MIT",
   "scripts": {
     "dev": "vite",

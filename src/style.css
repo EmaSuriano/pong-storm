@@ -6,6 +6,7 @@
     --accent: #6ee7a8;
     --accent2: #f2b84b;
     --danger: #f2555a;
+    --gold: #7aa2ff;
     --border: #2c3342;
   }
   * { box-sizing: border-box; }
@@ -19,30 +20,40 @@
   #overlay {
     position: fixed; inset: 0;
     display: flex; align-items: center; justify-content: center;
-    background: var(--bg);
+    background:
+      radial-gradient(ellipse at 50% 0%, #2a1a12 0%, var(--bg) 62%);
     z-index: 10;
   }
   #card {
     background: var(--panel);
-    border: 2px solid var(--border);
+    border: 3px solid var(--gold);
     padding: 28px 32px;
-    width: 380px;
+    width: 400px;
     max-width: 90vw;
     image-rendering: pixelated;
+    box-shadow: 0 0 0 4px #3a1610, 0 16px 0 #0a0c10;
+  }
+  #card .kicker {
+    margin: 0 0 2px 0;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent2);
   }
   #card h1 {
-    font-size: 15px;
-    letter-spacing: 2px;
-    color: var(--accent);
-    margin: 0 0 4px 0;
+    font-size: 28px;
+    letter-spacing: 6px;
+    color: var(--gold);
+    margin: 0 0 8px 0;
     text-transform: uppercase;
   }
   #card p.sub {
     color: var(--dim);
     font-size: 12px;
-    margin: 0 0 20px 0;
+    margin: 0 0 22px 0;
+    line-height: 1.45;
   }
-  .row { margin-bottom: 14px; }
+  .row { margin-bottom: 12px; }
   label { display: block; font-size: 11px; color: var(--dim); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
   input[type=text] {
     width: 100%;
@@ -64,13 +75,13 @@
     background: #0d1016;
     color: var(--ink);
     cursor: pointer;
+    width: 100%;
   }
   button:hover { border-color: var(--accent); color: var(--accent); }
   button.primary {
     background: var(--accent);
     color: #0d1016;
     border-color: var(--accent);
-    width: 100%;
     font-weight: bold;
   }
   button.primary:hover { background: #85f0b6; color: #0d1016; }
@@ -80,10 +91,28 @@
   }
   button:disabled:hover { border-color: var(--border); color: var(--ink); }
   button.primary:disabled:hover { background: var(--accent); color: #0d1016; border-color: var(--accent); }
-  #linkRow { display: none; margin-top: 6px; }
-  #linkRow.show { display: block; }
+  #createPanel, #joinPanel { display: none; }
+  #createPanel.show, #joinPanel.show { display: block; }
+  #menuMain.hide { display: none; }
+  #codeDisplay {
+    font-size: 28px;
+    letter-spacing: 8px;
+    text-align: center;
+    padding: 10px 0 14px;
+    color: var(--gold);
+    font-weight: bold;
+  }
   #linkBox {
     display: flex; gap: 6px;
+    margin-bottom: 10px;
+  }
+  #linkBox input { flex: 1; }
+  #linkBox button { width: auto; }
+  .hint { font-size: 11px; color: var(--dim); margin: 0 0 14px 0; }
+  #createBack, #joinBack {
+    width: auto;
+    margin-top: 4px;
+    padding: 8px 12px;
   }
   #status { font-size: 11px; color: var(--dim); margin-top: 14px; min-height: 14px; }
   #status.err { color: var(--danger); }
@@ -94,10 +123,46 @@
     align-items: center; justify-content: center;
     flex-direction: column;
   }
+  #shareBar {
+    display: none;
+    position: fixed;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 8;
+    background: #1b202b;
+    border: 2px solid #7aa2ff;
+    padding: 8px 10px;
+    gap: 8px;
+    align-items: center;
+    width: min(520px, 92vw);
+  }
+  #shareBar.show { display: flex; }
+  #shareBar .shareLabel {
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #7aa2ff;
+    white-space: nowrap;
+  }
+  #shareBar input {
+    flex: 1;
+    min-width: 0;
+  }
+  #shareBar button {
+    width: auto;
+    padding: 8px 12px;
+    background: #6ee7a8;
+    color: #0d1016;
+    border-color: #6ee7a8;
+    font-weight: bold;
+  }
   #hud {
     position: fixed; top: 10px; left: 10px;
     font-size: 11px; color: var(--dim);
     z-index: 5; letter-spacing: 1px;
+    max-width: calc(100vw - 24px);
+    line-height: 1.5;
   }
   #hud span.you { color: var(--accent); }
   #hud span.peer { color: var(--accent2); }

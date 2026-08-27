@@ -1,101 +1,67 @@
-# Kaplay Coop Starter
+# Pongstorm
 
-The smallest working peer-to-peer coop game you can fork: a Vite + TypeScript template that puts two players on a Kaplay canvas, connected through Trystero over MQTT signaling and WebRTC. Host a room, share the link, walk around.
+Wild 1v1 browser Pong with superpowers and multiple balls.
 
-**Demo:** [emasuriano.github.io/kaplay-coop-starter](https://emasuriano.github.io/kaplay-coop-starter/)
+Host a room, share the link, first to 7.
 
-## Features
+**Play:** https://emasuriano.github.io/pong-storm/
 
-- Room links — create a room, copy the URL, anyone with the link joins
-- MQTT signaling via `@trystero-p2p/mqtt` (public brokers; no game server)
-- Position sync and a one-shot color handshake between peers
-- TypeScript + Vite, strict types, one-command local preview
+## How to play
 
-## Quick start
+- **Host** paddle is on the left (green). **Joiner** paddle is on the right (gold).
+- Move with **WASD** or **arrow keys**.
+- **Space** or **J**: hold to charge a smash, release, then the next paddle hit launches a faster, brighter smash.
+- If a ball leaves the left edge, the joiner scores; right edge, the host scores. That ball resets and serves toward the scorer's opponent after a short delay.
+- First to **7** wins.
+- When the scoreline first reaches about **2-2**, a second ball storms in. More balls spawn as the storm grows, cap **6**.
+
+### Powers
+
+Pickups spawn on the table. The last player to hit the ball that collects a pickup gets that power (one slot).
+
+| Power | Effect |
+| --- | --- |
+| **Split** | Next paddle hit fires an extra ball (respects the 6-ball cap) |
+| **Smash** | Next hit is an auto-smash, even without charging |
+| **Giant** | Paddle height about 1.7x for about 6 seconds |
+| **Curve** | Next outgoing ball gets a vertical curve for a few seconds |
+| **Ghost** | Next outgoing ball is dim; opponent collision is slightly late/thin for about 4 seconds |
+
+## Two-tab test
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000), click **Create Room**, then paste the share link into a second tab. Move with WASD or arrow keys.
+1. Open http://localhost:3000
+2. Click **Create Game**, copy the share link
+3. Paste that URL into a second tab
+4. Play. Host owns the simulation; the joiner dead-reckons balls between snapshots.
 
-WebRTC will not work from a `file://` URL. Always use the Vite dev server (or any `http://` / `https://` origin).
-
-## Use as a template
-
-1. Use this repo as a GitHub template, or clone it and delete `.git`.
-2. **Change `APP_ID` in `src/config.ts` to something unique.** Trystero rooms are namespaced by `appId`. If two apps share the same `appId`, their rooms can collide — players from unrelated games may see each other. This starter ships `kaplay-coop-starter` (not the old demo id `claude-coop-pixel-demo-v1`); still pick your own before you ship.
-3. Rename `package.json` (`name`, `description`) to match your game.
-4. Replace `src/game.ts` with your game. Keep `src/net.ts` unless you change signaling.
+WebRTC will not work from a file URL. Always use the Vite dev server (or any http / https origin). Closing the host tab ends the match. There is no TURN server.
 
 ## Stack
 
 | Piece | Role |
 | --- | --- |
-| [Vite](https://vitejs.dev/) | Dev server and bundler |
-| [TypeScript](https://www.typescriptlang.org/) | Strict types, `tsc --noEmit` |
-| [Kaplay](https://kaplayjs.com/) | 2D canvas game loop, sprites, input |
-| [@trystero-p2p/mqtt](https://www.npmjs.com/package/@trystero-p2p/mqtt) | P2P rooms: MQTT signaling, then WebRTC |
+| Vite | Dev server and bundler |
+| TypeScript | Strict types (tsc noEmit) |
+| Kaplay | 2D canvas game loop, input, draw |
+| @trystero-p2p/mqtt | P2P rooms: MQTT signaling, then WebRTC |
 
-## Project structure
-
-```
-.
-├── .github/workflows/  # CI on PRs, GitHub Pages deploy on main
-├── index.html          # Lobby overlay + game canvas (stable element ids)
-├── package.json        # Scripts and dependencies
-├── tsconfig.json       # Strict TypeScript (noEmit, bundler resolution)
-├── vite.config.ts      # Dev server on port 3000, host + strictPort
-├── LICENSE             # MIT
-├── README.md
-└── src/
-    ├── main.ts         # Lobby flow: create / join room, wire the canvas
-    ├── game.ts         # Kaplay scene, movement, peer sprites, sync
-    ├── net.ts          # joinRoom / genCode / shareLink helpers
-    ├── config.ts       # APP_ID, canvas size, colors, speed
-    ├── style.css       # Overlay, HUD, and canvas styles
-    └── vite-env.d.ts   # Vite client type reference
-```
-
-## How multiplayer works
-
-There is no game server. `connectRoom` calls Trystero `joinRoom({ appId }, roomCode, { onJoinError })`. The host generates a 6-character code and puts it in `?room=` on the share URL; joiners open that link (`isHost = !room` query param).
-
-Once the room exists, `game.ts` creates two typed actions: `hello` (color handshake) and `pos` (`{ x, y }` at ~20 Hz). Each peer has a local sprite; remote peers are spawned on `onPeerJoin` (and seeded from `getPeers()` if someone is already there). MQTT public brokers are used only for signaling — after that, browsers talk WebRTC peer-to-peer.
-
-WebRTC needs a real origin (`http://localhost` or `https://`). Two tabs on the same machine is the easiest test. Restrictive NATs or firewalls may need a TURN server later; this starter does not ship one.
+There is no game server. src/net.ts joins a Trystero room namespaced by APP_ID (pong-storm). The host integrates paddles, balls, scoring, and pickups, then broadcasts a world snapshot at about 20 Hz. Each peer sends paddle input only ({ up, down, charging }) at about 20 Hz. Joiners dead-reckon balls between snapshots. No game server.
 
 ## Scripts
 
-| Script | Command |
-| --- | --- |
-| `npm run dev` | Vite dev server at http://localhost:3000 |
-| `npm run build` | Production bundle into `dist/` |
-| `npm run preview` | Serve the production build locally |
-| `npm run typecheck` | `tsc --noEmit` |
-
-## Customize
-
-Edit these first:
-
-- **`src/config.ts`** — unique `APP_ID`, canvas size, grid, speed, host/join colors
-- **`src/game.ts`** — sprites, movement, and anything you sync over the wire
-- **`index.html`** — lobby copy and layout (keep the element ids `main.ts` queries)
-- **`src/style.css`** — overlay, HUD, and canvas look
-
-Leave `src/net.ts` alone unless you swap the Trystero strategy or signaling.
+Vite: dev server on port 3000, build into dist, preview the production bundle, and typecheck with tsc.
 
 ## Deploy
 
-Pushes to `main` build the site and publish it to GitHub Pages:
+Pushes to main publish GitHub Pages at https://emasuriano.github.io/pong-storm/. The workflow sets the Vite public base to /pong-storm/. Local development still uses /.
 
-https://emasuriano.github.io/kaplay-coop-starter/
-
-The live origin is `https`, which WebRTC needs. GitHub Actions sets `VITE_BASE=/kaplay-coop-starter/` so asset URLs work on the project Pages path. Local `npm run dev` still uses `/`.
-
-First time (or after forking): repo **Settings → Pages → Source = GitHub Actions**. Forks should change `VITE_BASE` in `.github/workflows/pages.yml` to `/<their-repo-name>/`.
+Repo Settings, Pages, Source = GitHub Actions.
 
 ## License
 
-MIT
+MIT. Free and open source.
