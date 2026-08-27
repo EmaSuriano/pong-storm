@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Kaplay Coop Starter</title>
+<link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+
+<div id="overlay">
+  <div id="card">
+    <h1>Kaplay Coop</h1>
+    <p class="sub">Peer-to-peer starter. Host a room, share the link.</p>
+
+    <div class="row">
+      <button class="primary" id="hostBtn">Create Room</button>
+    </div>
+
+    <div id="linkRow">
+      <label>Share this link</label>
+      <div id="linkBox">
+        <input type="text" id="linkInput" readonly>
+        <button id="copyBtn">Copy</button>
+      </div>
+    </div>
+
+    <div id="status">Waiting...</div>
+  </div>
+</div>
+
+<div id="gameWrap">
+  <div id="hud">
+    <span class="you">■ YOU</span> — WASD / Arrows to move &nbsp;|&nbsp;
+    <span class="peer">■ PEERS</span> connected: <span id="peerCount">0</span>
+  </div>
+  <canvas id="gameCanvas"></canvas>
+</div>
+
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>
