@@ -84,6 +84,8 @@ type WorldMsg = {
   shake: number
   flash: number
   flashSide: Side | null
+  cue: number
+  snd: string
 }
 
 type Ball = BallSnap & {
@@ -151,10 +153,43 @@ export function startGame(
   for (const kind of POWERS) {
     k.loadSprite('pickup-' + kind, `${assetBase}pickup-${kind}.png`)
   }
+  k.loadMusic('music', `${assetBase}audio/music-loop.ogg`)
+  k.loadSound('hitPaddle', `${assetBase}audio/hit-paddle.ogg`)
+  k.loadSound('hitWall', `${assetBase}audio/hit-wall.ogg`)
+  k.loadSound('smash', `${assetBase}audio/smash.ogg`)
+  k.loadSound('score', `${assetBase}audio/score.ogg`)
+  k.loadSound('pickup', `${assetBase}audio/pickup.ogg`)
+  k.loadSound('serve', `${assetBase}audio/serve.ogg`)
 
   function spriteReady(name: string): boolean {
     const a = k.getSprite(name)
     return !!(a && a.loaded && a.data)
+  }
+
+  let musicOn = false
+  let cueSeq = 0
+  let cueSnd = ''
+  let lastCue = 0
+  function sfx(name: string, vol = 0.7): void {
+    try {
+      k.play(name, { volume: vol })
+    } catch {
+      /* not loaded yet */
+    }
+  }
+  function cue(name: string, vol = 0.7): void {
+    cueSeq += 1
+    cueSnd = name
+    sfx(name, vol)
+  }
+  function ensureMusic(): void {
+    if (musicOn) return
+    try {
+      k.play('music', { loop: true, volume: 0.34 })
+      musicOn = true
+    } catch {
+      /* wait for a later gesture */
+    }
   }
 
   const preventKeys = (ev: KeyboardEvent) => {
@@ -168,6 +203,7 @@ export function startGame(
     }
   }
   window.addEventListener('keydown', preventKeys, { passive: false })
+  window.addEventListener('pointerdown', ensureMusic, { once: true })
 
   const inputAction = room.makeAction<InputMsg>('inp')
   const worldAction = room.makeAction<WorldMsg>('wld')
@@ -210,6 +246,52 @@ export function startGame(
   const paddles: Record<Side, Paddle> = { left, right }
 
   let balls: Ball[] = []
+
+  type TrailPt = { x: number; y: number }
+  const trails = new Map<number, TrailPt[]>()
+
+  function sampleTrails(): void {
+    const keep = new Set(balls.map((b) => b.id))
+    for (const id of Array.from(trails.keys())) {
+      if (!keep.has(id)) trails.delete(id)
+    }
+    for (const b of balls) {
+      const spd = Math.hypot(b.vx, b.vy)
+      const t = clamp((spd - BALL_SPEED * 0.45) / (BALL_SPEED_MAX - BALL_SPEED * 0.45), 0, 1)
+      const maxPts = 5 + Math.round(t * 16)
+      let arr = trails.get(b.id) || []
+      const last = arr[0]
+      if (!last || Math.hypot(last.x - b.x, last.y - b.y) > 1.5) {
+        arr = [{ x: b.x, y: b.y }, ...arr]
+      }
+      if (arr.length > maxPts) arr = arr.slice(0, maxPts)
+      trails.set(b.id, arr)
+    }
+  }
+
+  function drawTrails(): void {
+    const peach = rgbHex('#F0B090')
+    for (const b of balls) {
+      const arr = trails.get(b.id)
+      if (!arr || arr.length < 2) continue
+      const spd = Math.hypot(b.vx, b.vy)
+      const t = clamp((spd - BALL_SPEED * 0.45) / (BALL_SPEED_MAX - BALL_SPEED * 0.45), 0, 1)
+      const ghostMul = b.ghost ? 0.4 : 1
+      const col = b.hot > 0 ? peach : cream
+      for (let i = 1; i < arr.length; i++) {
+        const p = arr[i]!
+        const fade = (1 - i / arr.length) * (0.12 + t * 0.5) * ghostMul
+        const r = BALL_R * (0.9 - (i / arr.length) * 0.55)
+        k.drawCircle({
+          pos: k.vec2(p.x, p.y),
+          radius: Math.max(1.4, r),
+          color: col,
+          opacity: fade,
+        })
+      }
+    }
+  }
+
   let pickups: Pickup[] = []
   let leftScore = 0
   let rightScore = 0
@@ -263,6 +345,7 @@ export function startGame(
       lastHit: null,
       hitCd: 0,
     })
+    cue('serve', 0.55)
   }
 
   function queueServe(dir?: number): void {
@@ -292,6 +375,7 @@ export function startGame(
     queueServe()
     setShareBar(false)
     setEndBar(false)
+    ensureMusic()
   }
 
   function setEndBar(on: boolean, note = ''): void {
@@ -327,6 +411,7 @@ export function startGame(
     setShareBar(false)
     setEndBar(false)
     queueServe()
+    ensureMusic()
   }
 
   function boom(n: number): void {
@@ -336,6 +421,7 @@ export function startGame(
   }
 
   function givePower(side: Side, kind: PowerKind): void {
+    cue('pickup', 0.6)
     const p = paddleOf(side)
     if (kind === 'giant') {
       p.giantT = GIANT_TIME
@@ -362,9 +448,11 @@ export function startGame(
   function bounceWalls(b: BallSnap): void {
     if (b.y < BALL_R) {
       b.y = BALL_R
+      if (b.vy < 0) sfx('hitWall', 0.5)
       b.vy = Math.abs(b.vy)
     } else if (b.y > HEIGHT - BALL_R) {
       b.y = HEIGHT - BALL_R
+      if (b.vy > 0) sfx('hitWall', 0.5)
       b.vy = -Math.abs(b.vy)
     }
   }
@@ -426,6 +514,7 @@ export function startGame(
       consume(p, 'split')
       splitBall(b)
     }
+    cue(doSmash ? 'smash' : 'hitPaddle', doSmash ? 0.8 : 0.65)
   }
 
   function splitBall(src: Ball): void {
@@ -464,6 +553,7 @@ export function startGame(
     else rightScore += 1
     flashT = 0.4
     flashSide = side
+    cue('score', 0.7)
     if (leftScore >= WIN_SCORE) {
       status = 'over'
       winner = 'left'
@@ -551,6 +641,7 @@ export function startGame(
   }
 
   function readLocalInput(dt: number): void {
+    ensureMusic()
     const p = paddleOf(mySide)
     const up = k.isKeyDown('up') || k.isKeyDown('w')
     const down = k.isKeyDown('down') || k.isKeyDown('s')
@@ -604,6 +695,8 @@ export function startGame(
       shake: shakeSend,
       flash: flashT,
       flashSide,
+      cue: cueSeq,
+      snd: cueSnd,
     }
   }
 
@@ -611,6 +704,10 @@ export function startGame(
     if (msg.fx !== lastFx) {
       lastFx = msg.fx
       if (msg.shake > 0 && typeof k.shake === 'function') k.shake(msg.shake)
+    }
+    if (msg.cue !== lastCue) {
+      lastCue = msg.cue
+      if (msg.snd) sfx(msg.snd)
     }
     leftScore = msg.leftScore
     rightScore = msg.rightScore
@@ -964,6 +1061,7 @@ export function startGame(
       netAcc = 0
       sendNet()
     }
+    sampleTrails()
   }
   window.setInterval(pump, 50)
   k.onUpdate(() => {
@@ -1052,6 +1150,8 @@ export function startGame(
       const a = 0.35 + 0.25 * Math.sin(clock * 8)
       drawGlowCircle(WIDTH / 2, HEIGHT / 2, BALL_R, ink, 1.4, a)
     }
+
+    drawTrails()
 
     for (const b of balls) {
       const peach = rgbHex('#F0B090')
